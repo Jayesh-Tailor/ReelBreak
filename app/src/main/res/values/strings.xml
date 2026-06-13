@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Reel Break</string>
+    <string name="accessibility_service_description">Monitors Instagram Reels to help you take breaks.</string>
+</resources>
