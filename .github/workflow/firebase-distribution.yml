@@ -3,7 +3,7 @@ name: Distribute to Firebase App Distribution
 on:
   push:
     branches:
-      - main # Triggers the automation every time you push code to your main branch
+      - main
 
 jobs:
   build-and-distribute:
@@ -26,9 +26,10 @@ jobs:
       - name: Assemble Debug APK
         run: ./gradlew assembleDebug
 
-      - name: Upload APK to Firebase App Distribution
-        uses: w9jds/firebase-action@master
+      - name: Upload to Firebase App Distribution Action
+        uses: FirebaseExtended/action-firebase-distribution@v3
         with:
-          args: appdistribution:distribute app/build/outputs/apk/debug/app-debug.apk --app ${{ secrets.FIREBASE_APP_ID }} --groups "Friends"
-        env:
-          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+          appId: ${{ secrets.FIREBASE_APP_ID }}
+          token: ${{ secrets.FIREBASE_TOKEN }}
+          groups: Friends
+          file: app/build/outputs/apk/debug/app-debug.apk
