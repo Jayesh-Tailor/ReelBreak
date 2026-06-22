@@ -3,7 +3,7 @@ name: Distribute to Firebase App Distribution
 on:
   push:
     branches:
-      - main
+      - main # Double-check if your branch is named 'main' or 'master'
 
 jobs:
   build-and-distribute:
@@ -26,7 +26,7 @@ jobs:
       - name: Assemble Debug APK
         run: ./gradlew assembleDebug
 
-      - name: Upload to Firebase App Distribution Action
+      - name: Upload to Firebase App Distribution
         uses: FirebaseExtended/action-firebase-distribution@v3
         with:
           appId: ${{ secrets.FIREBASE_APP_ID }}
