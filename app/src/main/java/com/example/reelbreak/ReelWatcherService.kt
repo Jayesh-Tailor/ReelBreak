@@ -184,12 +184,13 @@ class ReelWatcherService : AccessibilityService() {
             }
 
             val isComments = isCommentsViewActive(eventSafe)
+            val isChat = isChatViewActive(eventSafe)
             
             // Focus primarily on scroll events for "active" scrolling
             if (eventType == AccessibilityEvent.TYPE_VIEW_SCROLLED) {
-                if (isComments) {
-                    Log.d(TAG, "SCROLL: User is in Comments. Reducing doom score.")
-                    doomScore = (doomScore - 1.0f).coerceAtLeast(0f)
+                if (isComments || isChat) {
+                    Log.d(TAG, "SCROLL: User is in Comments or Chat. Reducing doom score.")
+                    doomScore = (doomScore - 2.0f).coerceAtLeast(0f)
                     return
                 }
 
@@ -210,6 +211,55 @@ class ReelWatcherService : AccessibilityService() {
                 doomScore = (doomScore - 0.5f).coerceAtLeast(0f)
             }
         }
+    }
+
+    /**
+     * Detects if the user is currently interacting with the chat/DM section.
+     */
+    private fun isChatViewActive(event: AccessibilityEvent?): Boolean {
+        // 1. Check the event source
+        val source = event?.source
+        if (source != null) {
+            val resId = source.viewIdResourceName ?: ""
+            if (resId.contains("direct", ignoreCase = true) || 
+                resId.contains("message", ignoreCase = true) ||
+                resId.contains("thread", ignoreCase = true)) {
+                return true
+            }
+        }
+
+        // 2. Check the global UI state for DM markers
+        val rootNode = rootInActiveWindow ?: return false
+        
+        val chatMarkers = listOf(
+            "com.instagram.android:id/message_list_view",
+            "com.instagram.android:id/direct_recycler_view",
+            "com.instagram.android:id/thread_title",
+            "com.instagram.android:id/row_thread_container",
+            "com.instagram.android:id/action_bar_container_direct",
+            "com.instagram.android:id/direct_text_input",
+            "com.instagram.android:id/text_message_content",
+            "com.instagram.android:id/message_content_container",
+            "com.instagram.android:id/fragment_direct_container",
+            "com.instagram.android:id/direct_inbox_search_bar",
+            "com.instagram.android:id/action_bar_search_edit_text"
+        )
+        for (id in chatMarkers) {
+            if (rootNode.findAccessibilityNodeInfosByViewId(id).isNotEmpty()) return true
+        }
+
+        // 3. Check for "Messages" or "Chats" text
+        val chatTexts = listOf("Messages", "Chats", "Search") // Search often appears in DM list
+        for (text in chatTexts) {
+            val nodes = rootNode.findAccessibilityNodeInfosByText(text)
+            for (node in nodes) {
+                val bounds = android.graphics.Rect()
+                node.getBoundsInScreen(bounds)
+                if (bounds.top < 300) return true // Top headers for Chats
+            }
+        }
+
+        return false
     }
 
     /**
@@ -261,6 +311,9 @@ class ReelWatcherService : AccessibilityService() {
 
     private fun isReelsViewActive(): Boolean {
         val rootNode = rootInActiveWindow ?: return false
+
+        // 0. If we are in Chat or Comments, we are NOT in Reels
+        if (isChatViewActive(null) || isCommentsViewActive(null)) return false
 
         // 1. If a bottom sheet (like comments) is visible, we are NOT doom-scrolling reels
         val bottomSheets = rootNode.findAccessibilityNodeInfosByViewId("com.instagram.android:id/bottom_sheet_container")
