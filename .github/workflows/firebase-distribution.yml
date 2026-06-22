@@ -27,7 +27,7 @@ jobs:
         run: ./gradlew assembleDebug
 
       - name: Upload to Firebase App Distribution
-        uses: FirebaseExtended/action-firebase-distribution@v3
+        uses: firebaseextended/action-firebase-distribution@v3
         with:
           appId: ${{ secrets.FIREBASE_APP_ID }}
           token: ${{ secrets.FIREBASE_TOKEN }}
