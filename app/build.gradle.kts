@@ -12,7 +12,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.reelbreak"
+        applicationId = "com.jayeshtailor.reelbreak"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
